@@ -1,4 +1,4 @@
-package plugins.nherve.photomontage;
+package plugins.nherve.photomontage.roi;
 
 import icy.painter.Anchor2D;
 import icy.roi.ROI2DRectangle;
@@ -8,27 +8,35 @@ import java.awt.geom.Point2D;
 
 public class ROI2DRectangleAspectRatio extends ROI2DRectangle {
 
-	private Point2D bkTopLeft;
-	private Point2D bkTopRight;
-	private Point2D bkBottomLeft;
-	private Point2D bkBottomRight;
-	
 	public ROI2DRectangleAspectRatio(Point2D pt, boolean cm) {
 		super(pt, cm);
 		setName("RectangleAR2D");
-		
-		bkTopLeft = topLeft.getPosition();
-		bkTopRight = topRight.getPosition();
-		bkBottomLeft = bottomLeft.getPosition();
-		bkBottomRight = bottomRight.getPosition();
 	}
 
 	@Override
 	public void positionChanged(Anchor2D source) {
+		double w = 0;
+		double h = 0;
+
+		if (source == bottomRight) {
+			w = bottomRight.getX() - bottomLeft.getX();
+			h = topRight.getY() - bottomRight.getY();
+		}
+
+		// aspect ratio stuff here
+		if (Math.abs(w) > Math.abs(h)) {
+			h = w;
+		} else {
+			w = h;
+		}
+		
 		if (source == bottomRight) {
 			topRight.setX(bottomRight.getX());
+			topRight.setY(bottomRight.getY() - h);
+			bottomLeft.setX(bottomRight.getX() - w);
 			bottomLeft.setY(bottomRight.getY());
-			bkBottomRight = bottomRight.getPosition();
+			topLeft.setX(bottomRight.getX() - w);
+			topLeft.setY(bottomRight.getY() - h);
 		}
 
 		roiChanged(ROIPointEventType.POINT_CHANGED, source);

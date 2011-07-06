@@ -1,4 +1,4 @@
-package plugins.nherve.photomontage;
+package plugins.nherve.photomontage.roi;
 
 import icy.plugin.abstract_.Plugin;
 import icy.plugin.interface_.PluginROI;
