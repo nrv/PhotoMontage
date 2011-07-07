@@ -5,39 +5,32 @@ import icy.roi.ROI2DRectangle;
 import icy.roi.ROIEvent.ROIPointEventType;
 
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 
 public class ROI2DRectangleAspectRatio extends ROI2DRectangle {
+	private double ratio;
 
-	public ROI2DRectangleAspectRatio(Point2D pt, boolean cm) {
-		super(pt, cm);
+	public ROI2DRectangleAspectRatio(Rectangle2D r, double ar) {
+		super(r);
 		setName("RectangleAR2D");
+		this.ratio = ar;
 	}
 
 	@Override
 	public void positionChanged(Anchor2D source) {
 		double w = 0;
-		double h = 0;
 
 		if (source == bottomRight) {
 			w = bottomRight.getX() - bottomLeft.getX();
-			h = bottomRight.getY() - topRight.getY();
 		} else if (source == bottomLeft) {
 			w = bottomRight.getX() - bottomLeft.getX();
-			h = bottomLeft.getY() - topLeft.getY();
 		} else if (source == topRight) {
 			w = topRight.getX() - topLeft.getX();
-			h = bottomRight.getY() - topRight.getY();
 		} else if (source == topLeft) {
 			w = topRight.getX() - topLeft.getX();
-			h = bottomLeft.getY() - topLeft.getY();
 		}
 
-		// aspect ratio stuff here
-		if (Math.abs(w) > Math.abs(h)) {
-			h = w;
-		} else {
-			w = h;
-		}
+		double h = w / ratio;
 		
 		if (source == bottomRight) {
 			((Anchor2DNoEvent)bottomRight).setPositionNoEvent(topLeft.getX() + w, topLeft.getY() + h);
@@ -73,6 +66,16 @@ public class ROI2DRectangleAspectRatio extends ROI2DRectangle {
 	@Override
 	protected Anchor2D createAnchor(Point2D pos) {
 		return new Anchor2DNoEvent(pos, DEFAULT_SELECTED_COLOR, OVER_COLOR);
+	}
+
+	public double getRatio() {
+		return ratio;
+	}
+
+	public void setRatio(double ratio) {
+		this.ratio = ratio;
+		
+		positionChanged(topLeft);
 	}
 
 }
