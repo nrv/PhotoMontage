@@ -20,7 +20,16 @@ public class ROI2DRectangleAspectRatio extends ROI2DRectangle {
 
 		if (source == bottomRight) {
 			w = bottomRight.getX() - bottomLeft.getX();
-			h = topRight.getY() - bottomRight.getY();
+			h = bottomRight.getY() - topRight.getY();
+		} else if (source == bottomLeft) {
+			w = bottomRight.getX() - bottomLeft.getX();
+			h = bottomLeft.getY() - topLeft.getY();
+		} else if (source == topRight) {
+			w = topRight.getX() - topLeft.getX();
+			h = bottomRight.getY() - topRight.getY();
+		} else if (source == topLeft) {
+			w = topRight.getX() - topLeft.getX();
+			h = bottomLeft.getY() - topLeft.getY();
 		}
 
 		// aspect ratio stuff here
@@ -31,15 +40,39 @@ public class ROI2DRectangleAspectRatio extends ROI2DRectangle {
 		}
 		
 		if (source == bottomRight) {
-			topRight.setX(bottomRight.getX());
-			topRight.setY(bottomRight.getY() - h);
-			bottomLeft.setX(bottomRight.getX() - w);
-			bottomLeft.setY(bottomRight.getY());
-			topLeft.setX(bottomRight.getX() - w);
-			topLeft.setY(bottomRight.getY() - h);
+			((Anchor2DNoEvent)bottomRight).setPositionNoEvent(topLeft.getX() + w, topLeft.getY() + h);
+			((Anchor2DNoEvent)topRight).setXNoEvent(bottomRight.getX());
+			((Anchor2DNoEvent)bottomLeft).setYNoEvent(bottomRight.getY());
+		} else if (source == bottomLeft) {
+			((Anchor2DNoEvent)bottomLeft).setPositionNoEvent(topRight.getX() - w, topRight.getY() + h);
+			((Anchor2DNoEvent)topLeft).setXNoEvent(bottomLeft.getX());
+			((Anchor2DNoEvent)bottomRight).setYNoEvent(bottomLeft.getY());
+		} else if (source == topRight) {
+			((Anchor2DNoEvent)topRight).setPositionNoEvent(bottomLeft.getX() + w, bottomLeft.getY() - h);
+			((Anchor2DNoEvent)bottomRight).setXNoEvent(topRight.getX());
+			((Anchor2DNoEvent)topLeft).setYNoEvent(topRight.getY());
+		} else if (source == topLeft) {
+			((Anchor2DNoEvent)topLeft).setPositionNoEvent(bottomRight.getX() - w, bottomRight.getY() - h);
+			((Anchor2DNoEvent)bottomLeft).setXNoEvent(topLeft.getX());
+			((Anchor2DNoEvent)topRight).setYNoEvent(topLeft.getY());
 		}
 
 		roiChanged(ROIPointEventType.POINT_CHANGED, source);
+	}
+	
+	@Override
+	public void translate(double dx, double dy) {
+		((Anchor2DNoEvent)bottomRight).translateNoEvent(dx, dy);
+		((Anchor2DNoEvent)topLeft).translateNoEvent(dx, dy);
+		((Anchor2DNoEvent)topRight).translateNoEvent(dx, dy);
+		((Anchor2DNoEvent)bottomLeft).translateNoEvent(dx, dy);
+		
+		roiChanged(ROIPointEventType.POINT_CHANGED, bottomRight);
+	}
+
+	@Override
+	protected Anchor2D createAnchor(Point2D pos) {
+		return new Anchor2DNoEvent(pos, DEFAULT_SELECTED_COLOR, OVER_COLOR);
 	}
 
 }
