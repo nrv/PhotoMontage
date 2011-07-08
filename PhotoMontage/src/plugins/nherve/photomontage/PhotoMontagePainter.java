@@ -11,11 +11,16 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 
-import plugins.nherve.photomontage.roi.ROI2DRectangleAspectRatio;
+import plugins.nherve.photomontage.roi.PhotoMontageROI;
 import plugins.nherve.toolbox.image.mask.Mask;
 import plugins.nherve.toolbox.image.mask.MaskException;
 
 public class PhotoMontagePainter implements Painter {
+	public PhotoMontagePainter() {
+		super();
+		System.err.println(" -- PhotoMontagePainter created");
+	}
+
 	private Sequence internalSequence;
 	private Mask mask;
 	private boolean needRedraw;
@@ -25,8 +30,9 @@ public class PhotoMontagePainter implements Painter {
 	public void paint(Graphics2D g, Sequence sequence, IcyCanvas canvas) {
 		if (needRedraw) {
 			mask.fill(true);
+			mask.setOpacity(plugin.getCurrentOpacity());
 			for (ROI2D roi : internalSequence.getROI2Ds()) {
-				if (roi instanceof ROI2DRectangleAspectRatio) {
+				if (roi instanceof PhotoMontageROI) {
 					try {
 						mask.remove(roi);
 					} catch (MaskException e) {
@@ -38,6 +44,12 @@ public class PhotoMontagePainter implements Painter {
 		}
 		
 		mask.paint(g);
+	}
+	
+	@Override
+	protected void finalize() throws Throwable {
+		System.err.println(" -- PhotoMontagePainter finalized");
+		super.finalize();
 	}
 
 	@Override

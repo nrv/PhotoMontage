@@ -7,10 +7,10 @@ import icy.roi.ROIEvent.ROIPointEventType;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
-public class ROI2DRectangleAspectRatio extends ROI2DRectangle {
+public class PhotoMontageROI extends ROI2DRectangle {
 	private double ratio;
 
-	public ROI2DRectangleAspectRatio(Rectangle2D r, double ar) {
+	public PhotoMontageROI(Rectangle2D r, double ar) {
 		super(r);
 		setName("RectangleAR2D");
 		this.ratio = ar;

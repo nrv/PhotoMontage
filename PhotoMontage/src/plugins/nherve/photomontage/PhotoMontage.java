@@ -26,16 +26,18 @@ import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import plugins.nherve.photomontage.roi.ROI2DRectangleAspectRatio;
-import plugins.nherve.toolbox.image.mask.Mask;
+import plugins.nherve.photomontage.roi.PhotoMontageROI;
 import plugins.nherve.toolbox.plugin.PainterManagerSingletonPlugin;
 
-public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePainter> implements ActionListener, DocumentListener, ROIListener, SequenceListener {
+public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePainter> implements ActionListener, DocumentListener, ROIListener, SequenceListener, ChangeListener {
 	private final static String PLUGIN_NAME = "Photo Montage";
 	private final static String PLUGIN_VERSION = "1.0.0";
 	private final static String FULL_PLUGIN_NAME = PLUGIN_NAME + " V" + PLUGIN_VERSION;
@@ -47,6 +49,7 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 	private JTextField tfROIH;
 	private JLabel lbCurrentRatio;
 	private JButton btCreateROI;
+	private JSlider slOpacity;
 
 	private double currentRatio;
 
@@ -56,6 +59,12 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 		super();
 
 		df = new DecimalFormat("0.000", DecimalFormatSymbols.getInstance(Locale.FRANCE));
+	}
+	
+	@Override
+	protected void finalize() throws Throwable {
+		System.err.println(" ------ PhotoMontage finalized ------");
+		super.finalize();
 	}
 
 	@Override
@@ -97,7 +106,7 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 			double h = w / currentRatio;
 
 			Rectangle2D r = new Rectangle2D.Double(x, y, w, h);
-			ROI2DRectangleAspectRatio roi = new ROI2DRectangleAspectRatio(r, currentRatio);
+			PhotoMontageROI roi = new PhotoMontageROI(r, currentRatio);
 
 			roi.attachTo(s);
 			
@@ -148,6 +157,13 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 
 		btCreateROI = new JButton("Create");
 		btCreateROI.addActionListener(this);
+		
+		slOpacity = new JSlider(JSlider.HORIZONTAL, 0, 100, 50);
+		slOpacity.addChangeListener(this);
+		slOpacity.setMajorTickSpacing(10);
+		slOpacity.setMinorTickSpacing(2);
+		slOpacity.setPaintTicks(true);
+		slOpacity.setEnabled(false);
 
 		int w = 3;
 		int h = 2;
@@ -235,6 +251,27 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 	@Override
 	public void sequenceClosed(Sequence sequence) {
 		
+	}
+	
+	public float getCurrentOpacity() {
+		return slOpacity.getValue() / 100f;
+	}
+
+	@Override
+	public void stateChanged(ChangeEvent e) {
+		Object o = e.getSource();
+
+		if (o == null) {
+			return;
+		}
+
+		if (o instanceof JSlider) {
+			JSlider s = (JSlider) e.getSource();
+
+			if (s == slOpacity) {
+				updatePainter();
+			}
+		}
 	}
 
 }
