@@ -5,10 +5,13 @@ import icy.painter.Painter;
 import icy.roi.ROI2D;
 import icy.sequence.Sequence;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
 
 import plugins.nherve.photomontage.roi.PhotoMontageROI;
 import plugins.nherve.toolbox.image.mask.Mask;
@@ -59,8 +62,12 @@ public class PhotoMontagePainter implements Painter {
 			mask.fill(true);
 			mask.setOpacity(plugin.getCurrentOpacity());
 			mask.setColor(plugin.getWallColor());
+			
+			ArrayList<PhotoMontageROI> rois = new ArrayList<PhotoMontageROI>();
+			
 			for (ROI2D roi : internalSequence.getROI2Ds()) {
 				if (roi instanceof PhotoMontageROI) {
+					rois.add((PhotoMontageROI)roi);
 					try {
 						mask.remove(roi);
 					} catch (MaskException e) {
@@ -68,6 +75,17 @@ public class PhotoMontagePainter implements Painter {
 					}
 				}
 			}
+			
+			for (int i = 0; i < rois.size() - 1; i++) {
+				for (int j = i + 1; j < rois.size(); j++) {
+					Line2D line = rois.get(i).getXLink(rois.get(j));
+					if (line != null) {
+						g.setColor(Color.BLACK);
+						g.draw(line);
+					}
+				}
+			}
+			
 			needRedraw = false;
 		}
 		
