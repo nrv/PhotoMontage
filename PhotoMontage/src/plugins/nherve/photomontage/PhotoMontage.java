@@ -40,6 +40,7 @@ import javax.swing.event.DocumentListener;
 import plugins.nherve.photomontage.roi.AspectRatioPhotoMontageROI;
 import plugins.nherve.photomontage.roi.FixedSizePhotoMontageROI;
 import plugins.nherve.photomontage.roi.PhotoMontageROI;
+import plugins.nherve.toolbox.NherveToolbox;
 import plugins.nherve.toolbox.plugin.PainterManagerSingletonPlugin;
 
 public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePainter> implements ActionListener, DocumentListener, ROIListener, SequenceListener, ChangeListener {
@@ -65,6 +66,8 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 	private JLabel lbCurrentRatio;
 	private JButton btCreateARROI;
 	private JButton btCreateFSROI;
+	private JButton btSwitchARROI;
+	private JButton btSwitchFSROI;
 	private JSlider slOpacity;
 	private JButton btWallColor;
 	private JButton btFrameColor;
@@ -102,10 +105,30 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 				createFixedSizeROI();
 				return;
 			}
+			
+			if (b == btSwitchARROI) {
+				String tmp = tfARROIH.getText();
+				tfARROIH.setText(tfARROIW.getText());
+				tfARROIW.setText(tmp);
+				return;
+			}
+			
+			if (b == btSwitchFSROI) {
+				String tmp = tfFSROIH.getText();
+				tfFSROIH.setText(tfFSROIW.getText());
+				tfFSROIW.setText(tmp);
+				return;
+			}
 
 			if (b == btWallColor) {
-				btWallColor.setBackground(JColorChooser.showDialog(frame.getFrame(), "Choose current color", btWallColor.getBackground()));
+				btWallColor.setBackground(JColorChooser.showDialog(frame.getFrame(), "Choose current wall color", btWallColor.getBackground()));
 				updatePainter();
+				return;
+			}
+			
+			if (b == btFrameColor) {
+				btFrameColor.setBackground(JColorChooser.showDialog(frame.getFrame(), "Choose current frame color", btFrameColor.getBackground()));
+				updateROIs();
 				return;
 			}
 		}
@@ -143,6 +166,7 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 			Rectangle2D r = new Rectangle2D.Double(x, y, w, h);
 			PhotoMontageROI roi = new AspectRatioPhotoMontageROI(r, currentRatio);
 
+			roi.setColor(btFrameColor.getBackground());
 			roi.attachTo(s);
 			roi.addListener(this);
 		}
@@ -171,6 +195,7 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 				Rectangle2D r = new Rectangle2D.Double(x, y, w, h);
 				PhotoMontageROI roi = new FixedSizePhotoMontageROI(r);
 
+				roi.setColor(btFrameColor.getBackground());
 				roi.attachTo(s);
 				roi.addListener(this);
 			}
@@ -264,14 +289,10 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 		
 		new WindowPositionSaver(frame, PREFERENCES_NODE, new Point(0, 0), new Dimension(400, 400));
 
-		int dpi = 300;
-		int w = 3;
-		int h = 2;
-
 		lbCurrentImage = new JLabel(NONE);
 		lbImageW = new JLabel(NA);
 		lbImageH = new JLabel(NA);
-		tfDPI = new JTextField(Integer.toString(dpi));
+		tfDPI = new JTextField(Integer.toString(150));
 		ComponentUtil.setFixedHeight(tfDPI, 25);
 		JPanel p1a = GuiUtil.createLineBoxPanel(lbCurrentImage, Box.createHorizontalGlue());
 		JPanel p1b = GuiUtil.createLineBoxPanel(new JLabel("DPI"), tfDPI, Box.createHorizontalGlue(), new JLabel("W : "), lbImageW, Box.createHorizontalGlue(), new JLabel("H : "), lbImageH, Box.createHorizontalGlue());
@@ -284,6 +305,14 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 		
 		btCreateFSROI = new JButton("Create");
 		btCreateFSROI.addActionListener(this);
+		
+		btSwitchARROI = new JButton(NherveToolbox.switchIcon);
+		btSwitchARROI.setToolTipText("Switch");
+		btSwitchARROI.addActionListener(this);
+		
+		btSwitchFSROI = new JButton(NherveToolbox.switchIcon);
+		btSwitchARROI.setToolTipText("Switch");
+		btSwitchFSROI.addActionListener(this);
 
 		slOpacity = new JSlider(JSlider.HORIZONTAL, 0, 100, 50);
 		slOpacity.addChangeListener(this);
@@ -293,33 +322,39 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 
 		btWallColor = new JButton();
 		ComponentUtil.setFixedSize(btWallColor, new Dimension(50, 22));
-		btWallColor.setToolTipText("Change color");
+		btWallColor.setToolTipText("Change wall color");
 		btWallColor.setBackground(Color.WHITE);
 		btWallColor.addActionListener(this);
+		
+		btFrameColor = new JButton();
+		ComponentUtil.setFixedSize(btFrameColor, new Dimension(50, 22));
+		btFrameColor.setToolTipText("Change frame color");
+		btFrameColor.setBackground(Color.BLACK);
+		btFrameColor.addActionListener(this);
 
-		JPanel p3 = GuiUtil.createLineBoxPanel(slOpacity, Box.createHorizontalGlue(), btWallColor, Box.createHorizontalGlue());
+		JPanel p3 = GuiUtil.createLineBoxPanel(slOpacity, Box.createHorizontalGlue(), btWallColor, Box.createHorizontalGlue(), btFrameColor, Box.createHorizontalGlue());
 		p3.setBorder(new TitledBorder("Visualization options"));
 		mainPanel.add(p3);
 
-		tfARROIW = new JTextField(Integer.toString(w));
+		tfARROIW = new JTextField(Integer.toString(3));
 		ComponentUtil.setFixedHeight(tfARROIW, 25);
-		tfARROIH = new JTextField(Integer.toString(h));
+		tfARROIH = new JTextField(Integer.toString(2));
 		ComponentUtil.setFixedHeight(tfARROIH, 25);
 		JLabel lbR = new JLabel("Ratio : ");
 		lbCurrentRatio = new JLabel();
 
 		updateRatio();
 
-		JPanel p2 = GuiUtil.createLineBoxPanel(new JLabel("W"), tfARROIW, Box.createHorizontalGlue(), new JLabel("H"), tfARROIH, Box.createHorizontalGlue(), lbR, lbCurrentRatio, Box.createHorizontalGlue(), btCreateARROI);
+		JPanel p2 = GuiUtil.createLineBoxPanel(new JLabel("W"), tfARROIW, Box.createHorizontalGlue(), btSwitchARROI, Box.createHorizontalGlue(), new JLabel("H"), tfARROIH, Box.createHorizontalGlue(), lbR, lbCurrentRatio, Box.createHorizontalGlue(), btCreateARROI);
 		p2.setBorder(new TitledBorder("New Aspect Ratio ROI"));
 		mainPanel.add(p2);
 		
-		tfFSROIW = new JTextField(Integer.toString(w));
+		tfFSROIW = new JTextField(Integer.toString(15));
 		ComponentUtil.setFixedHeight(tfFSROIW, 25);
-		tfFSROIH = new JTextField(Integer.toString(h));
+		tfFSROIH = new JTextField(Integer.toString(10));
 		ComponentUtil.setFixedHeight(tfFSROIH, 25);
 		
-		JPanel p4 = GuiUtil.createLineBoxPanel(new JLabel("W"), tfFSROIW, new JLabel(CM), Box.createHorizontalGlue(), new JLabel("H"), tfFSROIH, new JLabel(CM), Box.createHorizontalGlue(), btCreateFSROI);
+		JPanel p4 = GuiUtil.createLineBoxPanel(new JLabel("W"), tfFSROIW, new JLabel(CM), Box.createHorizontalGlue(), btSwitchFSROI, Box.createHorizontalGlue(), new JLabel("H"), tfFSROIH, new JLabel(CM), Box.createHorizontalGlue(), btCreateFSROI);
 		p4.setBorder(new TitledBorder("New Fixed Size ROI"));
 		mainPanel.add(p4);
 
@@ -377,6 +412,16 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 		lbImageH.setText(NA);
 	}
 
+	private void updateROIs() {
+		for(Sequence s : getSequences()) {
+			for (ROI2D roi : s.getROI2Ds()) {
+				if (roi instanceof PhotoMontageROI) {
+					roi.setColor(btFrameColor.getBackground());
+				}
+			}
+		}
+	}
+	
 	private void updatePainter() {
 		if (hasCurrentSequence()) {
 			getCurrentSequencePainter().setNeedRedraw(true);
