@@ -180,9 +180,10 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 			double y = 0d;
 			double w = 0d;
 			double h = 0d;
+			double dpi = 0d;
 			
 			try {
-				double dpi = Double.parseDouble(tfDPI.getText());
+				dpi = Double.parseDouble(tfDPI.getText());
 				w = Double.parseDouble(tfFSROIW.getText());
 				w = convertCmToPix(w, dpi);
 				h = Double.parseDouble(tfFSROIH.getText());
@@ -191,9 +192,9 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 				// ignore
 			}
 			
-			if ((w != 0) && (h != 0)) {
+			if ((w != 0) && (h != 0) && (dpi!= 0)) {
 				Rectangle2D r = new Rectangle2D.Double(x, y, w, h);
-				PhotoMontageROI roi = new FixedSizePhotoMontageROI(r);
+				PhotoMontageROI roi = new FixedSizePhotoMontageROI(r, dpi);
 
 				roi.setColor(btFrameColor.getBackground());
 				roi.attachTo(s);
