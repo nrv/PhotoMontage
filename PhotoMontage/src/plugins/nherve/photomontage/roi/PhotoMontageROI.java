@@ -57,4 +57,29 @@ public abstract class PhotoMontageROI extends ROI2DRectangle {
 		return new Line2D.Double(x, minY, x, maxY);
 	}
 	
+	public Line2D getYLink(PhotoMontageROI other) {
+		Rectangle2D r1 = getBounds2D();
+		Rectangle2D r2 = other.getBounds2D();
+		
+		if (r1.intersects(r2)) {
+			return null;
+		}
+		
+		if (r1.getMaxY() < r2.getMinY()) {
+			return null;
+		}
+		
+		if (r2.getMaxY() < r1.getMinY()) {
+			return null;
+		}
+		
+		double minY = Math.max(r1.getMinY(), r2.getMinY());
+		double maxY = Math.min(r1.getMaxY(), r2.getMaxY());
+		double y = minY + (maxY - minY) / 2;
+		double minX = Math.max(r1.getMinX(), r2.getMinX());
+		double maxX = Math.min(r1.getMaxX(), r2.getMaxX());
+		
+		return new Line2D.Double(minX, y, maxX, y);
+	}
+	
 }

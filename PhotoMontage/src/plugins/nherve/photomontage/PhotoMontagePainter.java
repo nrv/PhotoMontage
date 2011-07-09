@@ -5,6 +5,7 @@ import icy.painter.Painter;
 import icy.roi.ROI2D;
 import icy.sequence.Sequence;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
@@ -12,6 +13,7 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.List;
 
 import plugins.nherve.photomontage.roi.PhotoMontageROI;
 import plugins.nherve.toolbox.image.mask.Mask;
@@ -21,17 +23,20 @@ public class PhotoMontagePainter implements Painter {
 	private Sequence internalSequence;
 
 	private Mask mask;
+	private List<Line2D> lines;
 	private boolean needRedraw;
 	private PhotoMontage plugin;
-	
+
 	public PhotoMontagePainter() {
 		super();
+		
+		lines = new ArrayList<Line2D>();
 	}
 
 	@Override
 	public void keyPressed(KeyEvent e, Point2D imagePoint, IcyCanvas canvas) {
 	}
-	
+
 	@Override
 	public void keyReleased(KeyEvent e, Point2D imagePoint, IcyCanvas canvas) {
 	}
@@ -62,12 +67,12 @@ public class PhotoMontagePainter implements Painter {
 			mask.fill(true);
 			mask.setOpacity(plugin.getCurrentOpacity());
 			mask.setColor(plugin.getWallColor());
-			
+
 			ArrayList<PhotoMontageROI> rois = new ArrayList<PhotoMontageROI>();
-			
+
 			for (ROI2D roi : internalSequence.getROI2Ds()) {
 				if (roi instanceof PhotoMontageROI) {
-					rois.add((PhotoMontageROI)roi);
+					rois.add((PhotoMontageROI) roi);
 					try {
 						mask.remove(roi);
 					} catch (MaskException e) {
@@ -75,21 +80,42 @@ public class PhotoMontagePainter implements Painter {
 					}
 				}
 			}
+
+			lines.clear();
 			
 			for (int i = 0; i < rois.size() - 1; i++) {
 				for (int j = i + 1; j < rois.size(); j++) {
 					Line2D line = rois.get(i).getXLink(rois.get(j));
+					if (line == null) {
+						line = rois.get(i).getYLink(rois.get(j));
+					}
 					if (line != null) {
-						g.setColor(Color.BLACK);
-						g.draw(line);
+						boolean add = true;
+						for (int k = 0; k < rois.size(); k++) {
+							if ((k != i) && (k !=j) && (line.intersects(rois.get(k).getRectangle()))) {
+								add = false;
+								break;
+							}
+						}
+						if (add) {
+							lines.add(line);
+						}
 					}
 				}
 			}
-			
+
 			needRedraw = false;
 		}
-		
+
 		mask.paint(g);
+
+		if (lines.size() > 0) {
+			g.setColor(Color.BLACK);
+			g.setStroke(new BasicStroke((float) (1 / canvas.getScaleFactorX())));
+			for (Line2D l : lines) {
+				g.draw(l);
+			}
+		}
 	}
 
 	public void setNeedRedraw(boolean needRedraw) {

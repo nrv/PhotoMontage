@@ -307,11 +307,11 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 		btCreateFSROI = new JButton("Create");
 		btCreateFSROI.addActionListener(this);
 		
-		btSwitchARROI = new JButton(NherveToolbox.switchIcon);
+		btSwitchARROI = new JButton("<->" /*NherveToolbox.switchIcon*/);
 		btSwitchARROI.setToolTipText("Switch");
 		btSwitchARROI.addActionListener(this);
 		
-		btSwitchFSROI = new JButton(NherveToolbox.switchIcon);
+		btSwitchFSROI = new JButton("<->" /*NherveToolbox.switchIcon*/);
 		btSwitchARROI.setToolTipText("Switch");
 		btSwitchFSROI.addActionListener(this);
 
