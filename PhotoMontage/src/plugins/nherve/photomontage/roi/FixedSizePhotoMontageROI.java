@@ -12,7 +12,7 @@ public class FixedSizePhotoMontageROI extends PhotoMontageROI {
 	
 	public FixedSizePhotoMontageROI(Rectangle2D r, double originalDPI) {
 		super(r);
-		
+		setName("FixedSizePhotoMontageROI");
 		this.originalWidth = r.getWidth();
 		this.originalHeight = r.getHeight();
 		this.originalDPI = originalDPI;

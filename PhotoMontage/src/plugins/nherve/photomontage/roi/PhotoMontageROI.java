@@ -12,6 +12,7 @@ public abstract class PhotoMontageROI extends ROI2DRectangle {
 	
 	public PhotoMontageROI(Rectangle2D r) {
 		super(r);
+		setName("PhotoMontageROI");
 	}
 
 	@Override
@@ -80,6 +81,12 @@ public abstract class PhotoMontageROI extends ROI2DRectangle {
 		double maxX = Math.min(r1.getMaxX(), r2.getMaxX());
 		
 		return new Line2D.Double(minX, y, maxX, y);
+	}
+
+	@Override
+	public String toString() {
+		Rectangle2D r1 = getBounds2D();
+		return getName() + " - ("+r1.getMinX()+", "+r1.getMinY()+" -> "+r1.getMaxX()+", "+r1.getMaxY()+")";
 	}
 	
 }
