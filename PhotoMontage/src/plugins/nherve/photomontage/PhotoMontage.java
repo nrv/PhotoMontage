@@ -112,11 +112,10 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 
 	private JButton btDuplicateROI;
 
-	
 	private JButton btLoad;
 	private JButton btSave;
 	private JButton btProcess;
-	
+
 	private JTextField tfFrameThick1;
 	private JTextField tfFrameThick2;
 
@@ -162,15 +161,15 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 				duplicateROI();
 				return;
 			}
-			
+
 			if (b == btLoad) {
 				return;
 			}
-			
+
 			if (b == btSave) {
 				return;
 			}
-			
+
 			if (b == btProcess) {
 				return;
 			}
@@ -287,28 +286,24 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 
 		List<Link> links = new ArrayList<Link>();
 
-		try {
-			double thick = getThickness1() + getThickness2();
+		double thick = getThickness1() + getThickness2();
 
-			for (int i = 0; i < rois.size() - 1; i++) {
-				for (int j = i + 1; j < rois.size(); j++) {
-					Link link = rois.get(i).getLink(rois.get(j), thick);
-					if (link != null) {
-						boolean add = true;
-						for (int k = 0; k < rois.size(); k++) {
-							if ((k != i) && (k != j) && (link.intersects(rois.get(k).getRectangle()))) {
-								add = false;
-								break;
-							}
+		for (int i = 0; i < rois.size() - 1; i++) {
+			for (int j = i + 1; j < rois.size(); j++) {
+				Link link = rois.get(i).getLink(rois.get(j), thick);
+				if (link != null) {
+					boolean add = true;
+					for (int k = 0; k < rois.size(); k++) {
+						if ((k != i) && (k != j) && (link.intersects(rois.get(k).getRectangle()))) {
+							add = false;
+							break;
 						}
-						if (add) {
-							links.add(link);
-						}
+					}
+					if (add) {
+						links.add(link);
 					}
 				}
 			}
-		} catch (ParseException e) {
-			// ignore
 		}
 
 		return links;
@@ -394,12 +389,21 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 		return null;
 	}
 
-	public double getThickness1() throws ParseException {
-		return convertCmToPix(df.parse(tfFrameThick1.getText()).doubleValue(), getDPI());
+	public double getThickness1() {
+		try {
+			
+			return convertCmToPix(df.parse(tfFrameThick1.getText()).doubleValue(), getDPI());
+		} catch (ParseException e) {
+			return 0;
+		}
 	}
 
-	public double getThickness2() throws ParseException {
-		return convertCmToPix(df.parse(tfFrameThick2.getText()).doubleValue(), getDPI());
+	public double getThickness2() {
+		try {
+			return convertCmToPix(df.parse(tfFrameThick2.getText()).doubleValue(), getDPI());
+		} catch (ParseException e) {
+			return 0;
+		}
 	}
 
 	public Color getWallColor() {
@@ -662,6 +666,7 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 				if (Math.abs(dpi) > 0.1d) {
 					lbImageW.setText(format(convertPixToCm(w, dpi)) + CM);
 					lbImageH.setText(format(convertPixToCm(h, dpi)) + CM);
+					updatePainter(true);
 					return;
 				}
 			} catch (ParseException e) {
