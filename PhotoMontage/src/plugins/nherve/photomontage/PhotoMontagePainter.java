@@ -10,11 +10,10 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
-import java.util.ArrayList;
 import java.util.List;
 
+import plugins.nherve.photomontage.roi.Link;
 import plugins.nherve.photomontage.roi.PhotoMontageROI;
 import plugins.nherve.toolbox.image.mask.Mask;
 import plugins.nherve.toolbox.image.mask.MaskException;
@@ -23,14 +22,14 @@ public class PhotoMontagePainter implements Painter {
 	private Sequence internalSequence;
 
 	private Mask mask;
-	private List<Line2D> lines;
+	private List<Link> links;
 	private boolean needRedraw;
 	private PhotoMontage plugin;
 
 	public PhotoMontagePainter() {
 		super();
-		
-		lines = new ArrayList<Line2D>();
+
+		links = null;
 	}
 
 	@Override
@@ -68,11 +67,8 @@ public class PhotoMontagePainter implements Painter {
 			mask.setOpacity(plugin.getCurrentOpacity());
 			mask.setColor(plugin.getWallColor());
 
-			ArrayList<PhotoMontageROI> rois = new ArrayList<PhotoMontageROI>();
-
 			for (ROI2D roi : internalSequence.getROI2Ds()) {
 				if (roi instanceof PhotoMontageROI) {
-					rois.add((PhotoMontageROI) roi);
 					try {
 						mask.remove(roi);
 					} catch (MaskException e) {
@@ -81,39 +77,18 @@ public class PhotoMontagePainter implements Painter {
 				}
 			}
 
-			lines.clear();
-			
-			for (int i = 0; i < rois.size() - 1; i++) {
-				for (int j = i + 1; j < rois.size(); j++) {
-					Line2D line = rois.get(i).getXLink(rois.get(j));
-					if (line == null) {
-						line = rois.get(i).getYLink(rois.get(j));
-					}
-					if (line != null) {
-						boolean add = true;
-						for (int k = 0; k < rois.size(); k++) {
-							if ((k != i) && (k !=j) && (line.intersects(rois.get(k).getRectangle()))) {
-								add = false;
-								break;
-							}
-						}
-						if (add) {
-							lines.add(line);
-						}
-					}
-				}
-			}
+			links = plugin.createLinks(internalSequence);
 
 			needRedraw = false;
 		}
 
 		mask.paint(g);
 
-		if (lines.size() > 0) {
-			g.setColor(Color.BLACK);
-			g.setStroke(new BasicStroke((float) (1 / canvas.getScaleFactorX())));
-			for (Line2D l : lines) {
-				g.draw(l);
+		if (plugin.showLines() && (links != null)) {
+			if (links.size() > 0) {
+				for (Link l : links) {
+					l.paint(g, canvas.getScaleFactorX(), plugin.getDPI(), Color.BLACK, true);
+				}
 			}
 		}
 	}

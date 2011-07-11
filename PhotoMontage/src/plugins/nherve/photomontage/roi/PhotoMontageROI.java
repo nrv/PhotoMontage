@@ -4,11 +4,10 @@ import icy.painter.Anchor2D;
 import icy.roi.ROI2DRectangle;
 import icy.roi.ROIEvent.ROIPointEventType;
 
-import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
-public abstract class PhotoMontageROI extends ROI2DRectangle {
+public abstract class PhotoMontageROI extends ROI2DRectangle implements Cloneable {
 	
 	public PhotoMontageROI(Rectangle2D r) {
 		super(r);
@@ -33,7 +32,15 @@ public abstract class PhotoMontageROI extends ROI2DRectangle {
 		return new Anchor2DNoEvent(pos, DEFAULT_SELECTED_COLOR, OVER_COLOR);
 	}
 	
-	public Line2D getXLink(PhotoMontageROI other) {
+	public Link getLink(PhotoMontageROI other) {
+		Link l = getXLink(other);
+		if (l == null) {
+			l = getYLink(other);
+		}
+		return l;
+	}
+	
+	private Link getXLink(PhotoMontageROI other) {
 		Rectangle2D r1 = getBounds2D();
 		Rectangle2D r2 = other.getBounds2D();
 		
@@ -55,10 +62,10 @@ public abstract class PhotoMontageROI extends ROI2DRectangle {
 		double minY = Math.max(r1.getMinY(), r2.getMinY());
 		double maxY = Math.min(r1.getMaxY(), r2.getMaxY());
 		
-		return new Line2D.Double(x, minY, x, maxY);
+		return new Link(x, minY, x, maxY);
 	}
 	
-	public Line2D getYLink(PhotoMontageROI other) {
+	private Link getYLink(PhotoMontageROI other) {
 		Rectangle2D r1 = getBounds2D();
 		Rectangle2D r2 = other.getBounds2D();
 		
@@ -80,7 +87,7 @@ public abstract class PhotoMontageROI extends ROI2DRectangle {
 		double minX = Math.max(r1.getMinX(), r2.getMinX());
 		double maxX = Math.min(r1.getMaxX(), r2.getMaxX());
 		
-		return new Line2D.Double(minX, y, maxX, y);
+		return new Link(minX, y, maxX, y);
 	}
 
 	@Override
@@ -88,5 +95,9 @@ public abstract class PhotoMontageROI extends ROI2DRectangle {
 		Rectangle2D r1 = getBounds2D();
 		return getName() + " - ("+r1.getMinX()+", "+r1.getMinY()+" -> "+r1.getMaxX()+", "+r1.getMaxY()+")";
 	}
+
 	
+	@Override
+	public abstract Object clone() throws CloneNotSupportedException;
+
 }

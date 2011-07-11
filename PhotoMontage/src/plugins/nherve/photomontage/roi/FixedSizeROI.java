@@ -5,17 +5,15 @@ import icy.roi.ROIEvent.ROIPointEventType;
 
 import java.awt.geom.Rectangle2D;
 
-public class FixedSizePhotoMontageROI extends PhotoMontageROI {
-	private final double originalDPI;
+public class FixedSizeROI extends PhotoMontageROI {
 	private final double originalWidth;
 	private final double originalHeight;
 	
-	public FixedSizePhotoMontageROI(Rectangle2D r, double originalDPI) {
+	public FixedSizeROI(Rectangle2D r) {
 		super(r);
-		setName("FixedSizePhotoMontageROI");
+		setName("FixedSizeROI");
 		this.originalWidth = r.getWidth();
 		this.originalHeight = r.getHeight();
-		this.originalDPI = originalDPI;
 	}
 
 	@Override
@@ -39,6 +37,12 @@ public class FixedSizePhotoMontageROI extends PhotoMontageROI {
 		}
 
 		roiChanged(ROIPointEventType.POINT_CHANGED, source);
+	}
+
+	@Override
+	public Object clone() throws CloneNotSupportedException {
+		FixedSizeROI roi = new FixedSizeROI(getBounds2D());
+		return roi;
 	}
 
 }

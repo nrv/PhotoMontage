@@ -5,12 +5,12 @@ import icy.roi.ROIEvent.ROIPointEventType;
 
 import java.awt.geom.Rectangle2D;
 
-public class AspectRatioPhotoMontageROI extends PhotoMontageROI {
+public class AspectRatioROI extends PhotoMontageROI {
 	private double ratio;
 	
-	public AspectRatioPhotoMontageROI(Rectangle2D r, double ratio) {
+	public AspectRatioROI(Rectangle2D r, double ratio) {
 		super(r);
-		setName("AspectRatioPhotoMontageROI");
+		setName("AspectRatioROI");
 		this.ratio = ratio;
 	}
 	
@@ -59,5 +59,11 @@ public class AspectRatioPhotoMontageROI extends PhotoMontageROI {
 		this.ratio = ratio;
 		
 		positionChanged(topLeft);
+	}
+
+	@Override
+	public Object clone() throws CloneNotSupportedException {
+		AspectRatioROI roi = new AspectRatioROI(getBounds2D(), ratio);
+		return roi;
 	}
 }
