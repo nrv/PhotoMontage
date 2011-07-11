@@ -15,9 +15,6 @@ public abstract class PhotoMontageROI extends ROI2DRectangle implements Cloneabl
 	}
 
 	@Override
-	public abstract void positionChanged(Anchor2D source);
-	
-	@Override
 	public void translate(double dx, double dy) {
 		((Anchor2DNoEvent)bottomRight).translateNoEvent(dx, dy);
 		((Anchor2DNoEvent)topLeft).translateNoEvent(dx, dy);
