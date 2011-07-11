@@ -112,6 +112,11 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 
 	private JButton btDuplicateROI;
 
+	
+	private JButton btLoad;
+	private JButton btSave;
+	private JButton btProcess;
+	
 	private JTextField tfFrameThick1;
 	private JTextField tfFrameThick2;
 
@@ -155,6 +160,18 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 
 			if (b == btDuplicateROI) {
 				duplicateROI();
+				return;
+			}
+			
+			if (b == btLoad) {
+				return;
+			}
+			
+			if (b == btSave) {
+				return;
+			}
+			
+			if (b == btProcess) {
 				return;
 			}
 
@@ -583,6 +600,22 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 		JPanel p5 = GuiUtil.createLineBoxPanel(lbCurrentROI, Box.createHorizontalGlue(), btDuplicateROI);
 		p5.setBorder(new TitledBorder("Current ROI"));
 		mainPanel.add(p5);
+		
+		
+		btLoad = new JButton("Load");
+		btLoad.addActionListener(this);
+		btLoad.setEnabled(false);
+		
+		btSave = new JButton("Save");
+		btSave.addActionListener(this);
+		btSave.setEnabled(false);
+		
+		btProcess = new JButton("Process");
+		btProcess.addActionListener(this);
+		
+		JPanel p7 = GuiUtil.createLineBoxPanel(btLoad, Box.createHorizontalGlue(), btSave, Box.createHorizontalGlue(), btProcess);
+		p7.setBorder(new TitledBorder("Global actions"));
+		mainPanel.add(p7);
 
 		tfARROIW.getDocument().addDocumentListener(this);
 		tfARROIH.getDocument().addDocumentListener(this);

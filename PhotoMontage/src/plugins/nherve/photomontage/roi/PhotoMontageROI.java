@@ -4,8 +4,15 @@ import icy.painter.Anchor2D;
 import icy.roi.ROI2DRectangle;
 import icy.roi.ROIEvent.ROIPointEventType;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+
+import plugins.nherve.photomontage.PhotoMontage;
 
 public abstract class PhotoMontageROI extends ROI2DRectangle implements Cloneable {
 	
@@ -93,6 +100,26 @@ public abstract class PhotoMontageROI extends ROI2DRectangle implements Cloneabl
 		return getName() + " - ("+r1.getMinX()+", "+r1.getMinY()+" -> "+r1.getMaxX()+", "+r1.getMaxY()+")";
 	}
 
+	public void paintDimensions(Graphics2D g, double zoom, double dpi, Color color) {
+		g.setColor(color);
+		
+		Font font = new Font("Arial", Font.BOLD, (int)(10 / zoom));
+		g.setFont(font);
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		Rectangle2D r = getBounds2D();
+		
+		String str = PhotoMontage.format(PhotoMontage.convertPixToCm(r.getWidth(), dpi)) + PhotoMontage.CM;
+		Rectangle2D tr = font.getStringBounds(str, g.getFontRenderContext());
+		float tx = (float)(r.getCenterX() - tr.getWidth() / 2);
+		float ty = (float)(r.getMinY() + 20 + tr.getHeight() / 2);
+		g.drawString(str, tx, ty);
+		
+		str = PhotoMontage.format(PhotoMontage.convertPixToCm(r.getHeight(), dpi)) + PhotoMontage.CM;
+		tr = font.getStringBounds(str, g.getFontRenderContext());
+		tx = (float)(r.getMinX() + 20);
+		ty = (float)(r.getCenterY() + tr.getHeight() / 2);
+		g.drawString(str, tx, ty);
+	}
 	
 	@Override
 	public abstract Object clone() throws CloneNotSupportedException;

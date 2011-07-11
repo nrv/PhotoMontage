@@ -88,6 +88,11 @@ public class PhotoMontagePainter implements Painter {
 		try {
 			for (ROI2D roi : internalSequence.getROI2Ds()) {
 				if (roi instanceof PhotoMontageROI) {
+					
+					if (plugin.showLines()) {
+						((PhotoMontageROI)roi).paintDimensions(g, canvas.getScaleFactorX(), plugin.getDPI(), Color.BLACK);
+					}
+					
 					Rectangle2D r = roi.getBounds2D();
 
 					double t1 = plugin.getThickness1();
