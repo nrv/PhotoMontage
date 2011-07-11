@@ -24,6 +24,7 @@ import java.awt.event.ItemListener;
 import java.awt.geom.Rectangle2D;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,13 +59,13 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 	private final static String NA = "n.a.";
 	public final static String CM = " cm";
 	private final static double CM_PER_INCH = 2.54d;
-	
+
 	private static DecimalFormat df;
-	
+
 	static {
 		df = new DecimalFormat("0.00", DecimalFormatSymbols.getInstance());
 	}
-	
+
 	public static String format(double arg0) {
 		return df.format(arg0);
 	}
@@ -72,11 +73,11 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 	public static double convertCmToPix(double cm, double dpi) {
 		return dpi * cm / CM_PER_INCH;
 	}
-	
+
 	public static double convertPixToCm(double pix, double dpi) {
 		return pix * CM_PER_INCH / dpi;
 	}
-	
+
 	private IcyFrame frame;
 	private JTextField tfDPI;
 	private JLabel lbImageW;
@@ -94,15 +95,17 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 	private JButton btSwitchFSROI;
 	private JSlider slOpacity;
 	private JButton btWallColor;
-	private JButton btFrameColor;
+	private JButton btFrameIntColor;
+	private JButton btFrameExtColor;
 
 	private JButton btDuplicateROI;
+
+	private JTextField tfFrameThick1;
+	private JTextField tfFrameThick2;
 
 	private JCheckBox cbShowLines;
 
 	private double currentRatio;
-
-	
 
 	private boolean stopping;
 
@@ -158,11 +161,19 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 				return;
 			}
 
-			if (b == btFrameColor) {
-				btFrameColor.setBackground(JColorChooser.showDialog(frame.getFrame(), "Choose current frame color", btFrameColor.getBackground()));
+			if (b == btFrameIntColor) {
+				btFrameIntColor.setBackground(JColorChooser.showDialog(frame.getFrame(), "Choose current frame interior color", btFrameIntColor.getBackground()));
 				updateROIsColor();
+				updatePainter(true);
 				return;
 			}
+
+			if (b == btFrameExtColor) {
+				btFrameExtColor.setBackground(JColorChooser.showDialog(frame.getFrame(), "Choose current frame exterior color", btFrameExtColor.getBackground()));
+				updatePainter(true);
+				return;
+			}
+
 		}
 	}
 
@@ -173,6 +184,16 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 			updateRatio();
 		} else if (tf == tfDPI) {
 			updateDPI();
+		} else if ((tf == tfFrameThick1) || (tf == tfFrameThick2)) {
+			updatePainter(true);
+		}
+	}
+
+	private void addToCurrentSequence(PhotoMontageROI roi) {
+		if (hasCurrentSequence()) {
+			roi.setColor(btFrameIntColor.getBackground());
+			roi.attachTo(getCurrentSequence());
+			roi.addListener(this);
 		}
 	}
 
@@ -190,16 +211,12 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 			Rectangle2D r = new Rectangle2D.Double(x, y, w, h);
 			PhotoMontageROI roi = new AspectRatioROI(r, currentRatio);
 
-			roi.setColor(btFrameColor.getBackground());
-			roi.attachTo(s);
-			roi.addListener(this);
+			addToCurrentSequence(roi);
 		}
 	}
 
 	private void createFixedSizeROI() {
 		if (hasCurrentSequence()) {
-			Sequence s = getCurrentSequence();
-
 			double x = 0d;
 			double y = 0d;
 			double w = 0d;
@@ -207,12 +224,12 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 			double dpi = 0d;
 
 			try {
-				dpi = Double.parseDouble(tfDPI.getText());
-				w = Double.parseDouble(tfFSROIW.getText());
+				dpi = getDPI();
+				w = df.parse(tfFSROIW.getText()).doubleValue();
 				w = convertCmToPix(w, dpi);
-				h = Double.parseDouble(tfFSROIH.getText());
+				h = df.parse(tfFSROIH.getText()).doubleValue();
 				h = convertCmToPix(h, dpi);
-			} catch (NumberFormatException e) {
+			} catch (ParseException e) {
 				// ignore
 			}
 
@@ -220,9 +237,7 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 				Rectangle2D r = new Rectangle2D.Double(x, y, w, h);
 				PhotoMontageROI roi = new FixedSizeROI(r);
 
-				roi.setColor(btFrameColor.getBackground());
-				roi.attachTo(s);
-				roi.addListener(this);
+				addToCurrentSequence(roi);
 			}
 		}
 	}
@@ -237,23 +252,29 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 		}
 
 		List<Link> links = new ArrayList<Link>();
+		
+		try {
+			double thick = getThickness1() + getThickness2();
 
-		for (int i = 0; i < rois.size() - 1; i++) {
-			for (int j = i + 1; j < rois.size(); j++) {
-				Link link = rois.get(i).getLink(rois.get(j));
-				if (link != null) {
-					boolean add = true;
-					for (int k = 0; k < rois.size(); k++) {
-						if ((k != i) && (k != j) && (link.intersects(rois.get(k).getRectangle()))) {
-							add = false;
-							break;
+			for (int i = 0; i < rois.size() - 1; i++) {
+				for (int j = i + 1; j < rois.size(); j++) {
+					Link link = rois.get(i).getLink(rois.get(j), thick);
+					if (link != null) {
+						boolean add = true;
+						for (int k = 0; k < rois.size(); k++) {
+							if ((k != i) && (k != j) && (link.intersects(rois.get(k).getRectangle()))) {
+								add = false;
+								break;
+							}
 						}
-					}
-					if (add) {
-						links.add(link);
+						if (add) {
+							links.add(link);
+						}
 					}
 				}
 			}
+		} catch (ParseException e) {
+			// ignore
 		}
 
 		return links;
@@ -279,9 +300,7 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 					double dx = s.getWidth() / 10d;
 					double dy = s.getHeight() / 10d;
 					roi.translate(dx, dy);
-					roi.setColor(btFrameColor.getBackground());
-					roi.attachTo(s);
-					roi.addListener(this);
+					addToCurrentSequence(roi);
 				}
 			}
 		} catch (CloneNotSupportedException e) {
@@ -293,12 +312,24 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 		return slOpacity.getValue() / 100f;
 	}
 
-	public double getDPI() throws NumberFormatException {
-		return Double.parseDouble(tfDPI.getText());
+	public double getDPI() throws ParseException {
+		return df.parse(tfDPI.getText()).doubleValue();
+	}
+	
+	public double getThickness1() throws ParseException {
+		return convertCmToPix(df.parse(tfFrameThick1.getText()).doubleValue(), getDPI());
+	}
+	
+	public double getThickness2() throws ParseException {
+		return convertCmToPix(df.parse(tfFrameThick2.getText()).doubleValue(), getDPI());
 	}
 
-	public Color getFrameColor() {
-		return btFrameColor.getBackground();
+	public Color getFrameIntColor() {
+		return btFrameIntColor.getBackground();
+	}
+
+	public Color getFrameExtColor() {
+		return btFrameExtColor.getBackground();
 	}
 
 	@Override
@@ -455,17 +486,30 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 		btWallColor.setBackground(Color.WHITE);
 		btWallColor.addActionListener(this);
 
-		btFrameColor = new JButton();
-		ComponentUtil.setFixedSize(btFrameColor, new Dimension(50, 22));
-		btFrameColor.setToolTipText("Change frame color");
-		btFrameColor.setBackground(Color.BLACK);
-		btFrameColor.addActionListener(this);
+		btFrameIntColor = new JButton();
+		ComponentUtil.setFixedSize(btFrameIntColor, new Dimension(50, 22));
+		btFrameIntColor.setToolTipText("Change frame interior color");
+		btFrameIntColor.setBackground(Color.WHITE);
+		btFrameIntColor.addActionListener(this);
+
+		btFrameExtColor = new JButton();
+		ComponentUtil.setFixedSize(btFrameExtColor, new Dimension(50, 22));
+		btFrameExtColor.setToolTipText("Change frame exterior color");
+		btFrameExtColor.setBackground(Color.BLACK);
+		btFrameExtColor.addActionListener(this);
 
 		cbShowLines = new JCheckBox("Show lines");
 		cbShowLines.setSelected(true);
 		cbShowLines.addItemListener(this);
 
-		JPanel p3 = GuiUtil.createLineBoxPanel(slOpacity, Box.createHorizontalGlue(), cbShowLines, Box.createHorizontalGlue(), btWallColor, Box.createHorizontalGlue(), btFrameColor, Box.createHorizontalGlue());
+		tfFrameThick1 = new JTextField(format(0.25));
+		ComponentUtil.setFixedHeight(tfFrameThick1, 25);
+		tfFrameThick2 = new JTextField(format(1));
+		ComponentUtil.setFixedHeight(tfFrameThick2, 25);
+
+		JPanel p3a = GuiUtil.createLineBoxPanel(slOpacity, Box.createHorizontalGlue(), cbShowLines, Box.createHorizontalGlue(), btWallColor, Box.createHorizontalGlue(), btFrameIntColor, Box.createHorizontalGlue(), btFrameExtColor, Box.createHorizontalGlue());
+		JPanel p3b = GuiUtil.createLineBoxPanel(new JLabel("Thick 1"), tfFrameThick1, new JLabel(CM), Box.createHorizontalGlue(), new JLabel("Thick 2"), tfFrameThick2, new JLabel(CM));
+		JPanel p3 = GuiUtil.createPageBoxPanel(p3a, p3b);
 		p3.setBorder(new TitledBorder("Visualization options"));
 		mainPanel.add(p3);
 
@@ -482,9 +526,9 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 		p2.setBorder(new TitledBorder("New Aspect Ratio ROI"));
 		mainPanel.add(p2);
 
-		tfFSROIW = new JTextField(Integer.toString(15));
+		tfFSROIW = new JTextField(format(15));
 		ComponentUtil.setFixedHeight(tfFSROIW, 25);
-		tfFSROIH = new JTextField(Integer.toString(10));
+		tfFSROIH = new JTextField(format(10));
 		ComponentUtil.setFixedHeight(tfFSROIH, 25);
 
 		JPanel p4 = GuiUtil.createLineBoxPanel(new JLabel("W"), tfFSROIW, new JLabel(CM), Box.createHorizontalGlue(), btSwitchFSROI, Box.createHorizontalGlue(), new JLabel("H"), tfFSROIH, new JLabel(CM), Box.createHorizontalGlue(), btCreateFSROI);
@@ -501,6 +545,8 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 		tfARROIW.getDocument().addDocumentListener(this);
 		tfARROIH.getDocument().addDocumentListener(this);
 		tfDPI.getDocument().addDocumentListener(this);
+		tfFrameThick1.getDocument().addDocumentListener(this);
+		tfFrameThick2.getDocument().addDocumentListener(this);
 
 		frame.addFrameListener(this);
 		frame.setVisible(true);
@@ -543,7 +589,7 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 					lbImageH.setText(format(convertPixToCm(h, dpi)) + CM);
 					return;
 				}
-			} catch (NumberFormatException e) {
+			} catch (ParseException e) {
 				// ignore
 			}
 		}
@@ -563,8 +609,8 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 
 	private void updateRatio() {
 		try {
-			double w = Double.parseDouble(tfARROIW.getText());
-			double h = Double.parseDouble(tfARROIH.getText());
+			double w = df.parse(tfARROIW.getText()).doubleValue();
+			double h = df.parse(tfARROIH.getText()).doubleValue();
 
 			if ((h != 0) && (w != 0)) {
 				currentRatio = w / h;
@@ -573,7 +619,7 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 				btCreateFSROI.setEnabled(true);
 				return;
 			}
-		} catch (NumberFormatException e) {
+		} catch (ParseException e) {
 			// ignore
 		}
 
@@ -586,7 +632,7 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 		for (Sequence s : getSequences()) {
 			for (ROI2D roi : s.getROI2Ds()) {
 				if (roi instanceof PhotoMontageROI) {
-					roi.setColor(btFrameColor.getBackground());
+					roi.setColor(btFrameIntColor.getBackground());
 				}
 			}
 		}
@@ -605,10 +651,10 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 				lbCurrentROI.setText(roi.getName() + " " + w + CM + " x " + h + CM + " at (" + x + " - " + y + ")");
 				return;
 			}
-		} catch (NumberFormatException e) {
+		} catch (ParseException e) {
 			// ignore
 		}
-		
+
 		lbCurrentROI.setText(NONE);
 	}
 
@@ -621,6 +667,18 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 		}
 		if (e.getDocument() == tfARROIW.getDocument()) {
 			return tfARROIW;
+		}
+		if (e.getDocument() == tfFSROIH.getDocument()) {
+			return tfFSROIH;
+		}
+		if (e.getDocument() == tfFSROIW.getDocument()) {
+			return tfFSROIW;
+		}
+		if (e.getDocument() == tfFrameThick1.getDocument()) {
+			return tfFrameThick1;
+		}
+		if (e.getDocument() == tfFrameThick2.getDocument()) {
+			return tfFrameThick2;
 		}
 		return null;
 	}

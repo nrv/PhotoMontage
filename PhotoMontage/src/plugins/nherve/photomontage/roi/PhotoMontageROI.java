@@ -32,15 +32,15 @@ public abstract class PhotoMontageROI extends ROI2DRectangle implements Cloneabl
 		return new Anchor2DNoEvent(pos, DEFAULT_SELECTED_COLOR, OVER_COLOR);
 	}
 	
-	public Link getLink(PhotoMontageROI other) {
-		Link l = getXLink(other);
+	public Link getLink(PhotoMontageROI other, double frameThickness) {
+		Link l = getXLink(other, frameThickness);
 		if (l == null) {
-			l = getYLink(other);
+			l = getYLink(other, frameThickness);
 		}
 		return l;
 	}
 	
-	private Link getXLink(PhotoMontageROI other) {
+	private Link getXLink(PhotoMontageROI other, double frameThickness) {
 		Rectangle2D r1 = getBounds2D();
 		Rectangle2D r2 = other.getBounds2D();
 		
@@ -48,11 +48,11 @@ public abstract class PhotoMontageROI extends ROI2DRectangle implements Cloneabl
 			return null;
 		}
 		
-		if (r1.getMaxX() < r2.getMinX()) {
+		if (r1.getMaxX() + frameThickness < r2.getMinX() - frameThickness) {
 			return null;
 		}
 		
-		if (r2.getMaxX() < r1.getMinX()) {
+		if (r2.getMaxX() + frameThickness < r1.getMinX() - frameThickness) {
 			return null;
 		}
 		
@@ -62,10 +62,10 @@ public abstract class PhotoMontageROI extends ROI2DRectangle implements Cloneabl
 		double minY = Math.max(r1.getMinY(), r2.getMinY());
 		double maxY = Math.min(r1.getMaxY(), r2.getMaxY());
 		
-		return new Link(x, minY, x, maxY);
+		return new Link(x, minY - frameThickness, x, maxY + frameThickness);
 	}
 	
-	private Link getYLink(PhotoMontageROI other) {
+	private Link getYLink(PhotoMontageROI other, double frameThickness) {
 		Rectangle2D r1 = getBounds2D();
 		Rectangle2D r2 = other.getBounds2D();
 		
@@ -73,11 +73,11 @@ public abstract class PhotoMontageROI extends ROI2DRectangle implements Cloneabl
 			return null;
 		}
 		
-		if (r1.getMaxY() < r2.getMinY()) {
+		if (r1.getMaxY() + frameThickness < r2.getMinY() - frameThickness) {
 			return null;
 		}
 		
-		if (r2.getMaxY() < r1.getMinY()) {
+		if (r2.getMaxY() + frameThickness < r1.getMinY() - frameThickness) {
 			return null;
 		}
 		
@@ -87,7 +87,7 @@ public abstract class PhotoMontageROI extends ROI2DRectangle implements Cloneabl
 		double minX = Math.max(r1.getMinX(), r2.getMinX());
 		double maxX = Math.min(r1.getMaxX(), r2.getMaxX());
 		
-		return new Link(minX, y, maxX, y);
+		return new Link(minX - frameThickness, y, maxX + frameThickness, y);
 	}
 
 	@Override

@@ -5,12 +5,13 @@ import icy.painter.Painter;
 import icy.roi.ROI2D;
 import icy.sequence.Sequence;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.text.ParseException;
 import java.util.List;
 
 import plugins.nherve.photomontage.roi.Link;
@@ -84,11 +85,43 @@ public class PhotoMontagePainter implements Painter {
 
 		mask.paint(g);
 
-		if (plugin.showLines() && (links != null)) {
-			if (links.size() > 0) {
-				for (Link l : links) {
-					l.paint(g, canvas.getScaleFactorX(), plugin.getDPI(), Color.BLACK, true);
+		try {
+			for (ROI2D roi : internalSequence.getROI2Ds()) {
+				if (roi instanceof PhotoMontageROI) {
+					Rectangle2D r = roi.getBounds2D();
+
+					double t1 = plugin.getThickness1();
+					if (t1 > 0) {
+						g.setColor(plugin.getFrameIntColor());
+						g.fill(new Rectangle2D.Double(r.getMinX() - t1, r.getMinY() - t1, r.getWidth() + 2 * t1, t1));
+						g.fill(new Rectangle2D.Double(r.getMinX() - t1, r.getMaxY(), r.getWidth() + 2 * t1, t1));
+						g.fill(new Rectangle2D.Double(r.getMinX() - t1, r.getMinY() - t1, t1, r.getHeight() + 2 * t1));
+						g.fill(new Rectangle2D.Double(r.getMaxX(), r.getMinY() - t1, t1, r.getHeight() + 2 * t1));
+					}
+
+					double t2 = plugin.getThickness2();
+					if (t2 > 0) {
+						g.setColor(plugin.getFrameExtColor());
+						g.fill(new Rectangle2D.Double(r.getMinX() - t1 - t2, r.getMinY() - t1 - t2, r.getWidth() + 2 * t1 + 2* t2, t2));
+						g.fill(new Rectangle2D.Double(r.getMinX() - t1 - t2, r.getMaxY() + t1, r.getWidth() + 2 * t1 + 2* t2, t2));
+						g.fill(new Rectangle2D.Double(r.getMinX() - t1 - t2, r.getMinY() - t1 - t2, t2, r.getHeight() + 2 * t1 + 2 * t2));
+						g.fill(new Rectangle2D.Double(r.getMaxX() + t1, r.getMinY() - t1 - t2, t2, r.getHeight() + 2 * t1 + 2 * t2));
+					}
 				}
+			}
+		} catch (ParseException e) {
+			// ignore
+		}
+
+		if (plugin.showLines() && (links != null)) {
+			try {
+				if (links.size() > 0) {
+					for (Link l : links) {
+						l.paint(g, canvas.getScaleFactorX(), plugin.getDPI(), Color.BLACK, true);
+					}
+				}
+			} catch (ParseException e) {
+				// ignore
 			}
 		}
 	}
