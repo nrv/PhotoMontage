@@ -1,3 +1,22 @@
+/*
+ * Copyright 2011 Nicolas Hervé.
+ * 
+ * This file is part of PhotoMontage, which is an ICY plugin.
+ * 
+ * PhotoMontage is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * PhotoMontage is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with PhotoMontage. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package plugins.nherve.photomontage;
 
 import icy.gui.component.ComponentUtil;
@@ -54,7 +73,6 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 	private final static String PLUGIN_NAME = "Photo Montage";
 	private final static String PLUGIN_VERSION = "1.0.0";
 	private final static String FULL_PLUGIN_NAME = PLUGIN_NAME + " V" + PLUGIN_VERSION;
-	private final static String PREFERENCES_NODE = "icy/plugins/nherve/photomontage/PhotoMontage";
 
 	private final static String NONE = "none";
 	private final static String NA = "n.a.";
@@ -503,7 +521,7 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 		frame = GuiUtil.generateTitleFrame(FULL_PLUGIN_NAME, mainPanel, new Dimension(100, 100), true, true, true, true);
 		addIcyFrame(frame);
 
-		new WindowPositionSaver(frame, PREFERENCES_NODE, new Point(0, 0), new Dimension(400, 400));
+		new WindowPositionSaver(frame, getPreferences().absolutePath(), new Point(0, 0), new Dimension(400, 400));
 
 		lbCurrentImage = new JLabel(NONE);
 		lbImageW = new JLabel(NA);
