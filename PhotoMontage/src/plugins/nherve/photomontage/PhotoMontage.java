@@ -20,9 +20,7 @@
 package plugins.nherve.photomontage;
 
 import icy.gui.component.ComponentUtil;
-import icy.gui.frame.IcyFrame;
 import icy.gui.util.GuiUtil;
-import icy.gui.util.WindowPositionSaver;
 import icy.roi.ROI2D;
 import icy.roi.ROIEvent;
 import icy.roi.ROIEvent.ROIEventType;
@@ -35,7 +33,6 @@ import icy.sequence.SequenceListener;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -70,10 +67,6 @@ import plugins.nherve.toolbox.NherveToolbox;
 import plugins.nherve.toolbox.plugin.PainterManagerSingletonPlugin;
 
 public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePainter> implements ActionListener, DocumentListener, ROIListener, SequenceListener, ChangeListener, ItemListener {
-	private final static String PLUGIN_NAME = "Photo Montage";
-	private final static String PLUGIN_VERSION = "1.0.0";
-	private final static String FULL_PLUGIN_NAME = PLUGIN_NAME + " V" + PLUGIN_VERSION;
-
 	private final static String NONE = "none";
 	private final static String NA = "n.a.";
 	public final static String CM = " cm";
@@ -107,7 +100,6 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 		return df.format(arg0);
 	}
 
-	private IcyFrame frame;
 	private JTextField tfDPI;
 	private JLabel lbImageW;
 	private JLabel lbImageH;
@@ -207,20 +199,20 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 			}
 
 			if (b == btWallColor) {
-				btWallColor.setBackground(JColorChooser.showDialog(frame.getFrame(), "Choose current wall color", btWallColor.getBackground()));
+				btWallColor.setBackground(JColorChooser.showDialog(getFrame().getFrame(), "Choose current wall color", btWallColor.getBackground()));
 				updatePainter(true);
 				return;
 			}
 
 			if (b == btFrameIntColor) {
-				btFrameIntColor.setBackground(JColorChooser.showDialog(frame.getFrame(), "Choose current frame interior color", btFrameIntColor.getBackground()));
+				btFrameIntColor.setBackground(JColorChooser.showDialog(getFrame().getFrame(), "Choose current frame interior color", btFrameIntColor.getBackground()));
 				updateROIsColor();
 				updatePainter(true);
 				return;
 			}
 
 			if (b == btFrameExtColor) {
-				btFrameExtColor.setBackground(JColorChooser.showDialog(frame.getFrame(), "Choose current frame exterior color", btFrameExtColor.getBackground()));
+				btFrameExtColor.setBackground(JColorChooser.showDialog(getFrame().getFrame(), "Choose current frame exterior color", btFrameExtColor.getBackground()));
 				updatePainter(true);
 				return;
 			}
@@ -516,13 +508,7 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 	}
 
 	@Override
-	public void startInterface() {
-		JPanel mainPanel = GuiUtil.generatePanel();
-		frame = GuiUtil.generateTitleFrame(FULL_PLUGIN_NAME, mainPanel, new Dimension(100, 100), true, true, true, true);
-		addIcyFrame(frame);
-
-		new WindowPositionSaver(frame, getPreferences().absolutePath(), new Point(0, 0), new Dimension(400, 400));
-
+	public void fillInterface(JPanel mainPanel) {
 		lbCurrentImage = new JLabel(NONE);
 		lbImageW = new JLabel(NA);
 		lbImageH = new JLabel(NA);
@@ -644,12 +630,6 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 		tfDPI.getDocument().addDocumentListener(this);
 		tfFrameThick1.getDocument().addDocumentListener(this);
 		tfFrameThick2.getDocument().addDocumentListener(this);
-
-		frame.addFrameListener(this);
-		frame.setVisible(true);
-		frame.pack();
-
-		frame.requestFocus();
 	}
 
 	@Override
@@ -779,6 +759,11 @@ public class PhotoMontage extends PainterManagerSingletonPlugin<PhotoMontagePain
 			return tfFrameThick2;
 		}
 		return null;
+	}
+
+	@Override
+	public Dimension getDefaultFrameDimension() {
+		return new Dimension(400, 400);
 	}
 
 }
